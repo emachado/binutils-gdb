@@ -142,6 +142,9 @@ struct arch_lwp_info
   
   /* Cached stopped data address.  */
   CORE_ADDR stopped_data_address;
+
+  /* Flag to check if this is a new thread.  */
+  char is_new_thread;
 };
 
 static unsigned long ppc_hwcap;
@@ -1550,14 +1553,9 @@ static struct arch_lwp_info *
 ppc_new_thread (void)
 {
   struct arch_lwp_info *lwp = xcalloc (1, sizeof (struct arch_lwp_info));
-  int i;
 
-  /* All the break/watchpoints need to be inserted in new threads.  */
-  for (i = 0; i < PPC_MAX_HW_POINTS; i++)
-    {
-      lwp->hw_breakpoints_changed[i] = 1;
-      lwp->hw_watchpoints_changed[i] = 1;
-    }
+  /* Mark as new thread.  */
+  lwp->is_new_thread = 1;
 
   return lwp;
 }
@@ -1572,6 +1570,24 @@ ppc_prepare_to_resume (struct lwp_info *lwp)
   struct arch_process_info *proc_info = proc->private->arch_private;
   struct arch_lwp_info *lwp_info = lwp->arch_private;
   int i;
+
+  /* Check if this is a new thread in order to set all the valid hw points.  */
+  if (lwp_info->is_new_thread)
+    {
+      for (i = 0; i < ppc_linux_get_hw_breakpoint_count (); i++)
+	{
+	  if (proc_info->hw_breakpoints[i].enable)
+	    lwp_info->hw_breakpoints_changed[i] = 1;
+	}
+
+      for (i = 0; i < ppc_linux_get_hw_watchpoint_count (); i++)
+	{
+	  if (proc_info->hw_watchpoints[i].enable)
+	    lwp_info->hw_watchpoints_changed[i] = 1;
+	}
+
+      lwp_info->is_new_thread = 0;
+    }
 
   for (i = 0; i < ppc_linux_get_hw_breakpoint_count (); i++)
     {
@@ -1618,7 +1634,7 @@ ppc_prepare_to_resume (struct lwp_info *lwp)
 					     proc_info->hw_watchpoints[i].len,
 					     proc_info->hw_watchpoints[i].type,
 					     tid) < 0)
-		      perror_with_name ("Unexpected error when removing watchpoint");
+		perror_with_name ("Unexpected error when removing watchpoint");
 	    }
 
 	  lwp_info->hw_watchpoints_changed[i] = 0;
