@@ -1488,8 +1488,8 @@ ppc_remove_point (char type, CORE_ADDR addr, int len)
 {
   struct ppc_hw_point hw_point;
 
-  if (!((ppc_linux_get_hw_breakpoint_count() && type > '1' && type < '4')
-	&& (type > '2' && type < '4')))
+  if (((ppc_linux_get_hw_breakpoint_count() > 0) && (type < '1' || type > '4'))
+      || (type < '2' || type > '4'))
     /* Unsupported.  */
     return 1;
   
