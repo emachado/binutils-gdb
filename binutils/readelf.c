@@ -15510,6 +15510,32 @@ get_note_type (unsigned e_type)
 	return _("NT_PPC_VMX (ppc Altivec registers)");
       case NT_PPC_VSX:
 	return _("NT_PPC_VSX (ppc VSX registers)");
+      case NT_PPC_TAR:
+	return _("NT_PPC_TAR (ppc Target Address Register)");
+      case NT_PPC_PPR:
+	return _("NT_PPC_PPR (ppc Program Priority Register)");
+      case NT_PPC_DSCR:
+	return _("NT_PPC_DSCR (ppc Data Stream Control Register)");
+      case NT_PPC_EBB:
+	return _("NT_PPC_EBB (ppc Event Based Branch Registers)");
+      case NT_PPC_PMU:
+	return _("NT_PPC_PMU (ppc Performance Monitor Registers)");
+      case NT_PPC_TM_CGPR:
+	return _("NT_PPC_TM_CGPR (ppc TM checkpointed GPR Registers)");
+      case NT_PPC_TM_CFPR:
+	return _("NT_PPC_TM_CFPR (ppc TM checkpointed FPR Registers)");
+      case NT_PPC_TM_CVMX:
+	return _("NT_PPC_TM_CVMX (ppc TM checkpointed VMX Registers)");
+      case NT_PPC_TM_CVSX:
+	return _("NT_PPC_TM_CVSX (ppc TM checkpointed VSX Registers)");
+      case NT_PPC_TM_SPR:
+	return _("NT_PPC_TM_SPR (ppc TM Special Purpose Registers)");
+      case NT_PPC_TM_CTAR:
+	return _("NT_PPC_TM_CTAR (ppc TM checkpointed TAR Register)");
+      case NT_PPC_TM_CPPR:
+	return _("NT_PPC_TM_CPPR (ppc TM checkpointed PPR Register)");
+      case NT_PPC_TM_CDSCR:
+	return _("NT_PPC_TM_CDSCR (ppc TM checkpointed DSCR Register)");
       case NT_386_TLS:
 	return _("NT_386_TLS (x86 TLS information)");
       case NT_386_IOPERM:

@@ -568,6 +568,32 @@
 					/*   note name must be "LINUX".  */
 #define NT_PPC_VSX	0x102		/* PowerPC VSX registers */
 					/*   note name must be "LINUX".  */
+#define NT_PPC_TAR	0x103		/* PowerPC Target Address Register */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_PPR	0x104		/* PowerPC Program Priority Register */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_DSCR	0x105		/* PowerPC Data Stream Control Register */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_EBB	0x106		/* PowerPC Event Based Branch Registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_PMU	0x107		/* PowerPC Performance Monitor Registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CGPR	0x108		/* PowerPC TM checkpointed GPR registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CFPR	0x109		/* PowerPC TM checkpointed FPR registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CVMX	0x10a		/* PowerPC TM checkpointed VMX registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CVSX	0x10b		/* PowerPC TM checkpointed VSX registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_SPR	0x10c		/* PowerPC TM special purpose registers */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CTAR	0x10d		/* PowerPC TM checkpointed TAR register */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CPPR	0x10e		/* PowerPC TM checkpointed PPR register */
+					/*   note name must be "LINUX".  */
+#define NT_PPC_TM_CDSCR	0x10f		/* PowerPC TM checkpointed DSCR register */
+					/*   note name must be "LINUX".  */
 #define NT_386_TLS	0x200		/* x86 TLS information */
 					/*   note name must be "LINUX".  */
 #define NT_386_IOPERM	0x201		/* x86 io permissions */
