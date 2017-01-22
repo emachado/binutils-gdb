@@ -266,6 +266,12 @@ int have_ptrace_getsetregs = 1;
    them and gotten an error.  */
 int have_ptrace_getsetfpregs = 1;
 
+#ifndef NT_PPC_PPR
+/* ELF core note sections */
+#define NT_PPC_PPR	0x104		/* Program Priority Register */
+#define NT_PPC_DSCR	0x105		/* Data Stream Control Register */
+#endif /* NT_PPC_PPR */
+
 /* *INDENT-OFF* */
 /* registers layout, as presented by the ptrace interface:
 PT_R0, PT_R1, PT_R2, PT_R3, PT_R4, PT_R5, PT_R6, PT_R7,
@@ -487,6 +493,70 @@ fetch_spe_register (struct regcache *regcache, int tid, int regno)
                          &evrregs.spefscr);
 }
 
+/* Fetch all registers in the kernel's register set whose number is
+   REGSET_ID, whose size is REGSIZE, and whose layout is described by
+   REGSET, from process/thread TID and store their values in GDB's
+   register cache.  */
+static void
+fetch_regset (struct regcache *regcache, int tid,
+	      int regset_id, int regsize, const struct regset *regset)
+{
+  void *buf = alloca (regsize);
+  struct iovec iov;
+
+  iov.iov_base = buf;
+  iov.iov_len = regsize;
+
+  if (ptrace (PTRACE_GETREGSET, tid, (long) regset_id, (long) &iov) < 0)
+    {
+      if (errno == ENODATA)
+	regcache_supply_regset (regset, regcache, -1, NULL, regsize);
+      else
+	perror_with_name (_("Couldn't get register set"));
+    }
+  else
+    regcache_supply_regset (regset, regcache, -1, buf, regsize);
+}
+
+/* Store all registers in the kernel's register set whose number is
+   REGSET_ID, whose size is REGSIZE, and whose layout is described by
+   REGSET, from GDB's register cache back to process/thread TID.  */
+static void
+store_regset (const struct regcache *regcache, int tid,
+	      int regset_id, int regsize, const struct regset *regset)
+{
+  void *buf = alloca (regsize);
+  struct iovec iov;
+
+  iov.iov_base = buf;
+  iov.iov_len = regsize;
+
+  if (ptrace (PTRACE_GETREGSET, tid, (long) regset_id, (long) &iov) < 0)
+    perror_with_name (_("Couldn't get register set"));
+
+  regcache_collect_regset (regset, regcache, -1, buf, regsize);
+
+  if (ptrace (PTRACE_SETREGSET, tid, (long) regset_id, (long) &iov) < 0)
+    perror_with_name (_("Couldn't set register set"));
+}
+
+/* Check whether the kernel provides a register set with number REGSET
+   of size REGSIZE for process/thread TID.  */
+static int
+check_regset (int tid, int regset, int regsize)
+{
+  void *buf = alloca (regsize);
+  struct iovec iov;
+
+  iov.iov_base = buf;
+  iov.iov_len = regsize;
+
+  if (ptrace (PTRACE_GETREGSET, tid, (long) regset, (long) &iov) >= 0
+      || errno == ENODATA)
+    return 1;
+  return 0;
+}
+
 static void
 fetch_register (struct regcache *regcache, int tid, int regno)
 {
@@ -524,6 +594,18 @@ fetch_register (struct regcache *regcache, int tid, int regno)
   else if (spe_register_p (gdbarch, regno))
     {
       fetch_spe_register (regcache, tid, regno);
+      return;
+    }
+
+  if (regno == tdep->ppc_dscr_regnum)
+    {
+      fetch_regset (regcache, tid, NT_PPC_DSCR, 8, &ppc32_linux_dscrregset);
+      return;
+    }
+
+  if (regno == tdep->ppc_ppr_regnum)
+    {
+      fetch_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
       return;
     }
 
@@ -800,6 +882,10 @@ fetch_ppc_registers (struct regcache *regcache, int tid)
       fetch_vsx_registers (regcache, tid);
   if (tdep->ppc_ev0_upper_regnum >= 0)
     fetch_spe_register (regcache, tid, -1);
+  if (tdep->ppc_dscr_regnum != -1)
+    fetch_regset (regcache, tid, NT_PPC_DSCR, 8, &ppc32_linux_dscrregset);
+  if (tdep->ppc_ppr_regnum != -1)
+    fetch_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
 }
 
 /* Fetch registers from the child process.  Fetch all registers if
@@ -998,6 +1084,18 @@ store_register (const struct regcache *regcache, int tid, int regno)
   else if (spe_register_p (gdbarch, regno))
     {
       store_spe_register (regcache, tid, regno);
+      return;
+    }
+
+  if (regno == tdep->ppc_dscr_regnum)
+    {
+      store_regset (regcache, tid, NT_PPC_DSCR, 8, &ppc32_linux_dscrregset);
+      return;
+    }
+
+  if (regno == tdep->ppc_ppr_regnum)
+    {
+      store_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
       return;
     }
 
@@ -1296,6 +1394,10 @@ store_ppc_registers (const struct regcache *regcache, int tid)
       store_vsx_registers (regcache, tid);
   if (tdep->ppc_ev0_upper_regnum >= 0)
     store_spe_register (regcache, tid, -1);
+  if (tdep->ppc_dscr_regnum != -1)
+    store_regset (regcache, tid, NT_PPC_DSCR, 8, &ppc32_linux_dscrregset);
+  if (tdep->ppc_ppr_regnum != -1)
+    store_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
 }
 
 /* Fetch the AT_HWCAP entry from the aux vector.  */
@@ -1305,6 +1407,18 @@ ppc_linux_get_hwcap (void)
   CORE_ADDR field;
 
   if (target_auxv_search (&current_target, AT_HWCAP, &field))
+    return (unsigned long) field;
+
+  return 0;
+}
+
+/* Fetch the AT_HWCAP entry from the aux vector.  */
+static unsigned long
+ppc_linux_get_hwcap2 (void)
+{
+  CORE_ADDR field;
+
+  if (target_auxv_search (&current_target, AT_HWCAP2, &field))
     return (unsigned long) field;
 
   return 0;
@@ -2401,6 +2515,7 @@ ppc_linux_read_description (struct target_ops *ops)
   int vsx = 0;
   int isa205 = 0;
   int cell = 0;
+  int isa206 = 0;
 
   int tid = ptid_get_lwp (inferior_ptid);
   if (tid == 0)
@@ -2459,12 +2574,19 @@ ppc_linux_read_description (struct target_ops *ops)
   if (ppc_linux_get_hwcap () & PPC_FEATURE_CELL)
     cell = 1;
 
+  if ((ppc_linux_get_hwcap () & PPC_FEATURE_ARCH_2_06)
+      && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_DSCR)
+      && check_regset (tid, NT_PPC_PPR, sizeof(uint64_t))
+      && check_regset (tid, NT_PPC_DSCR, sizeof(uint64_t)))
+    isa206 = 1;
+
   if (ppc_linux_target_wordsize () == 8)
     {
       if (cell)
 	return tdesc_powerpc_cell64l;
       else if (vsx)
-	return isa205? tdesc_powerpc_isa205_vsx64l : tdesc_powerpc_vsx64l;
+	return isa206? tdesc_powerpc_isa206_vsx64l
+	  : isa205? tdesc_powerpc_isa205_vsx64l : tdesc_powerpc_vsx64l;
       else if (altivec)
 	return isa205
 	  ? tdesc_powerpc_isa205_altivec64l : tdesc_powerpc_altivec64l;
@@ -2475,7 +2597,8 @@ ppc_linux_read_description (struct target_ops *ops)
   if (cell)
     return tdesc_powerpc_cell32l;
   else if (vsx)
-    return isa205? tdesc_powerpc_isa205_vsx32l : tdesc_powerpc_vsx32l;
+    return isa206? tdesc_powerpc_isa206_vsx32l
+      : isa205? tdesc_powerpc_isa205_vsx32l : tdesc_powerpc_vsx32l;
   else if (altivec)
     return isa205? tdesc_powerpc_isa205_altivec32l : tdesc_powerpc_altivec32l;
 

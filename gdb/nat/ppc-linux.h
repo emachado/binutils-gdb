@@ -52,6 +52,14 @@
 #define PPC_FEATURE_HAS_SPE 0x00800000
 #endif
 
+/* The PPC_FEATURE2_* defines should also be provided by <asm/cputable.h>, but
+   they are used in the AT_HWCAP2 entry of AUXV.  If they aren't, we can
+   provide them ourselves (their values are fixed because they are part of the
+   kernel ABI).  */
+#ifndef PPC_FEATURE2_DSCR
+#define PPC_FEATURE2_DSCR 0x20000000
+#endif
+
 /* Glibc's headers don't define PTRACE_GETVRREGS so we cannot use a
    configure time check.  Some older glibc's (for instance 2.2.1)
    don't have a specific powerpc version of ptrace.h, and fall back on

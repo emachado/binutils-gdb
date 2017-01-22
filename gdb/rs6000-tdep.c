@@ -5937,7 +5937,7 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   enum powerpc_vector_abi vector_abi = powerpc_vector_abi_global;
   enum powerpc_elf_abi elf_abi = POWERPC_ELF_AUTO;
   int have_fpu = 1, have_spe = 0, have_mq = 0, have_altivec = 0, have_dfp = 0,
-      have_vsx = 0;
+      have_vsx = 0, have_dscr = 0, have_ppr = 0;
   int tdesc_wordsize = -1;
   const struct target_desc *tdesc = info.target_desc;
   struct tdesc_arch_data *tdesc_data = NULL;
@@ -6218,6 +6218,44 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 	}
       else
 	have_spe = 0;
+
+      /* Data Stream Control Register.  */
+      feature = tdesc_find_feature (tdesc,
+				    "org.gnu.gdb.power.dscr");
+      if (feature != NULL)
+	{
+	  valid_p = 1;
+	  valid_p &= tdesc_numbered_register (feature, tdesc_data,
+					      PPC_DSCR_REGNUM, "dscr");
+
+	  if (!valid_p)
+	    {
+	      tdesc_data_cleanup (tdesc_data);
+	      return NULL;
+	    }
+	  have_dscr = 1;
+	}
+      else
+	have_dscr = 0;
+
+      /* Program Priority Register.  */
+      feature = tdesc_find_feature (tdesc,
+				    "org.gnu.gdb.power.ppr");
+      if (feature != NULL)
+	{
+	  valid_p = 1;
+	  valid_p &= tdesc_numbered_register (feature, tdesc_data,
+					      PPC_PPR_REGNUM, "ppr");
+
+	  if (!valid_p)
+	    {
+	      tdesc_data_cleanup (tdesc_data);
+	      return NULL;
+	    }
+	  have_ppr = 1;
+	}
+      else
+	have_ppr = 0;
     }
 
   /* If we have a 64-bit binary on a 32-bit target, complain.  Also
@@ -6393,6 +6431,8 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   tdep->ppc_ev0_upper_regnum = have_spe ? PPC_SPE_UPPER_GP0_REGNUM : -1;
   tdep->ppc_acc_regnum = have_spe ? PPC_SPE_ACC_REGNUM : -1;
   tdep->ppc_spefscr_regnum = have_spe ? PPC_SPE_FSCR_REGNUM : -1;
+  tdep->ppc_dscr_regnum = have_dscr ? PPC_DSCR_REGNUM : -1;
+  tdep->ppc_ppr_regnum = have_ppr ? PPC_PPR_REGNUM : -1;
 
   set_gdbarch_pc_regnum (gdbarch, PPC_PC_REGNUM);
   set_gdbarch_sp_regnum (gdbarch, PPC_R0_REGNUM + 1);

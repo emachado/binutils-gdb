@@ -69,6 +69,7 @@
 #include "features/rs6000/powerpc-isa205-32l.c"
 #include "features/rs6000/powerpc-isa205-altivec32l.c"
 #include "features/rs6000/powerpc-isa205-vsx32l.c"
+#include "features/rs6000/powerpc-isa206-vsx32l.c"
 #include "features/rs6000/powerpc-64l.c"
 #include "features/rs6000/powerpc-altivec64l.c"
 #include "features/rs6000/powerpc-cell64l.c"
@@ -76,6 +77,7 @@
 #include "features/rs6000/powerpc-isa205-64l.c"
 #include "features/rs6000/powerpc-isa205-altivec64l.c"
 #include "features/rs6000/powerpc-isa205-vsx64l.c"
+#include "features/rs6000/powerpc-isa206-vsx64l.c"
 #include "features/rs6000/powerpc-e500l.c"
 
 /* Shared library operations for PowerPC-Linux.  */
@@ -473,6 +475,19 @@ static const struct ppc_reg_offsets ppc64_linux_reg_offsets =
     /* .vrsave_offset = */ 528
   };
 
+static const struct regcache_map_entry ppc32_regmap_dscr[] =
+  {
+      { 1, PPC_DSCR_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_ppr[] =
+  {
+      { 1, PPC_PPR_REGNUM, 8 },
+      { 0 }
+  };
+
+
 static const struct regset ppc32_linux_gregset = {
   &ppc32_linux_reg_offsets,
   ppc_linux_supply_gregset,
@@ -503,6 +518,18 @@ static const struct regset ppc32_linux_vsxregset = {
   ppc_collect_vsxregset
 };
 
+const struct regset ppc32_linux_dscrregset = {
+  ppc32_regmap_dscr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_pprregset = {
+  ppc32_regmap_ppr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
 const struct regset *
 ppc_linux_gregset (int wordsize)
 {
@@ -526,6 +553,8 @@ ppc_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
   int have_altivec = tdep->ppc_vr0_regnum != -1;
   int have_vsx = tdep->ppc_vsr0_upper_regnum != -1;
+  int have_dscr = tdep->ppc_dscr_regnum != -1;
+  int have_ppr = tdep->ppc_ppr_regnum != -1;
 
   if (tdep->wordsize == 4)
     cb (".reg", 48 * 4, &ppc32_linux_gregset, NULL, cb_data);
@@ -539,6 +568,11 @@ ppc_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
 
   if (have_vsx)
     cb (".reg-ppc-vsx", 256, &ppc32_linux_vsxregset, "POWER7 VSX", cb_data);
+
+  if (have_dscr)
+    cb (".reg-ppc-dscr", 8, &ppc32_linux_dscrregset, "Data Stream Control Register", cb_data);
+  if (have_ppr)
+    cb (".reg-ppc-ppr", 8, &ppc32_linux_pprregset, "Priority Program Register", cb_data);
 }
 
 static void
@@ -1862,6 +1896,7 @@ _initialize_ppc_linux_tdep (void)
   initialize_tdesc_powerpc_isa205_32l ();
   initialize_tdesc_powerpc_isa205_altivec32l ();
   initialize_tdesc_powerpc_isa205_vsx32l ();
+  initialize_tdesc_powerpc_isa206_vsx32l ();
   initialize_tdesc_powerpc_64l ();
   initialize_tdesc_powerpc_altivec64l ();
   initialize_tdesc_powerpc_cell64l ();
@@ -1869,5 +1904,6 @@ _initialize_ppc_linux_tdep (void)
   initialize_tdesc_powerpc_isa205_64l ();
   initialize_tdesc_powerpc_isa205_altivec64l ();
   initialize_tdesc_powerpc_isa205_vsx64l ();
+  initialize_tdesc_powerpc_isa206_vsx64l ();
   initialize_tdesc_powerpc_e500l ();
 }

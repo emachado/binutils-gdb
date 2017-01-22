@@ -245,6 +245,11 @@ struct gdbarch_tdep
     int ppc_acc_regnum;         /* SPE 'acc' register.  */
     int ppc_spefscr_regnum;     /* SPE 'spefscr' register.  */
 
+    /* Data Stream Control Register.  */
+    int ppc_dscr_regnum;
+    /* Program Priority Register.  */
+    int ppc_ppr_regnum;
+
     /* Decimal 128 registers.  */
     int ppc_dl0_regnum;		/* First Decimal128 argument register pair.  */
 
@@ -301,6 +306,8 @@ enum {
   PPC_VRSAVE_REGNUM = 139,
   PPC_VSR0_UPPER_REGNUM = 140,
   PPC_VSR31_UPPER_REGNUM = 171,
+  PPC_DSCR_REGNUM = 172,
+  PPC_PPR_REGNUM = 173,
   PPC_NUM_REGS
 };
 
