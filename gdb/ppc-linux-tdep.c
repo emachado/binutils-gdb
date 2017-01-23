@@ -495,6 +495,24 @@ static const struct regcache_map_entry ppc32_regmap_tar[] =
       { 0 }
   };
 
+static const struct regcache_map_entry ppc32_regmap_ebb[] =
+  {
+      { 1, PPC_EBBRR_REGNUM, 8 },
+      { 1, PPC_EBBHR_REGNUM, 8 },
+      { 1, PPC_BESCR_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_pmu[] =
+  {
+      { 1, PPC_SIAR_REGNUM, 8 },
+      { 1, PPC_SDAR_REGNUM, 8 },
+      { 1, PPC_SIER_REGNUM, 8 },
+      { 1, PPC_MMCR2_REGNUM, 8 },
+      { 1, PPC_MMCR0_REGNUM, 8 },
+      { 0 }
+  };
+
 static const struct regset ppc32_linux_gregset = {
   &ppc32_linux_reg_offsets,
   ppc_linux_supply_gregset,
@@ -539,6 +557,18 @@ const struct regset ppc32_linux_pprregset = {
 
 const struct regset ppc32_linux_tarregset = {
   ppc32_regmap_tar,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_ebbregset = {
+  ppc32_regmap_ebb,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_pmuregset = {
+  ppc32_regmap_pmu,
   regcache_supply_regset,
   regcache_collect_regset
 };
@@ -589,6 +619,12 @@ ppc_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
     cb (".reg-ppc-ppr", 8, &ppc32_linux_pprregset, "Priority Program Register", cb_data);
   if (have_tar)
     cb (".reg-ppc-tar", 8, &ppc32_linux_tarregset, "Target Address Register", cb_data);
+  if (tdep->have_ebb)
+    cb (".reg-ppc-ebb", PPC_SIZEOF_EBBREGSET, &ppc32_linux_ebbregset,
+	"Event-based Branching Registers", cb_data);
+  if (tdep->have_pmu)
+    cb (".reg-ppc-pmu", PPC_SIZEOF_PMUREGSET, &ppc32_linux_pmuregset,
+	"Performance Monitor Registers", cb_data);
 }
 
 static void

@@ -65,5 +65,7 @@ extern struct target_desc *tdesc_powerpc_isa207_vsx64l;
 extern const struct regset ppc32_linux_dscrregset;
 extern const struct regset ppc32_linux_pprregset;
 extern const struct regset ppc32_linux_tarregset;
+extern const struct regset ppc32_linux_ebbregset;
+extern const struct regset ppc32_linux_pmuregset;
 
 #endif /* PPC_LINUX_TDEP_H */

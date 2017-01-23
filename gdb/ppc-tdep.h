@@ -252,6 +252,9 @@ struct gdbarch_tdep
     /* Target Address Register.  */
     int ppc_tar_regnum;
 
+    int have_ebb;
+    int have_pmu;
+
     /* Decimal 128 registers.  */
     int ppc_dl0_regnum;		/* First Decimal128 argument register pair.  */
 
@@ -311,8 +314,27 @@ enum {
   PPC_DSCR_REGNUM = 172,
   PPC_PPR_REGNUM = 173,
   PPC_TAR_REGNUM = 174,
+  /* EBB registers.  */
+  PPC_EBBRR_REGNUM = 175,
+  PPC_EBBHR_REGNUM = 176,
+  PPC_BESCR_REGNUM = 177,
+  /* PMU registers.  */
+  PPC_SIAR_REGNUM = 178,
+  PPC_SDAR_REGNUM = 179,
+  PPC_SIER_REGNUM = 180,
+  PPC_MMCR2_REGNUM = 181,
+  PPC_MMCR0_REGNUM = 182,
   PPC_NUM_REGS
 };
+
+#define PPC_IS_EBBREGSET_REGNUM(i) \
+	((i) >= PPC_EBBRR_REGNUM && (i) <= PPC_BESCR_REGNUM)
+
+#define PPC_IS_PMUREGSET_REGNUM(i) \
+	((i) >= PPC_SIAR_REGNUM && (i) <= PPC_MMCR0_REGNUM)
+
+#define PPC_SIZEOF_EBBREGSET	(3*8)
+#define PPC_SIZEOF_PMUREGSET	(5*8)
 
 /* An instruction to match.  */
 

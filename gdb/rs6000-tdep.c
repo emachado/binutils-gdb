@@ -5937,7 +5937,8 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   enum powerpc_vector_abi vector_abi = powerpc_vector_abi_global;
   enum powerpc_elf_abi elf_abi = POWERPC_ELF_AUTO;
   int have_fpu = 1, have_spe = 0, have_mq = 0, have_altivec = 0, have_dfp = 0,
-      have_vsx = 0, have_dscr = 0, have_ppr = 0, have_tar = 0;
+      have_vsx = 0, have_dscr = 0, have_ppr = 0, have_tar = 0, have_ebb = 0,
+      have_pmu = 0;
   int tdesc_wordsize = -1;
   const struct target_desc *tdesc = info.target_desc;
   struct tdesc_arch_data *tdesc_data = NULL;
@@ -6275,6 +6276,54 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 	}
       else
 	have_tar = 0;
+
+      /* Event-based Branching Registers.  */
+      feature = tdesc_find_feature (tdesc,
+				    "org.gnu.gdb.power.ebb");
+      if (feature != NULL)
+	{
+	  static const char *const ebb_regs[] = {
+	    "ebbrr", "ebbhr", "bescr"
+	  };
+
+	  valid_p = 1;
+	  for (i = 0; i < ARRAY_SIZE (ebb_regs); i++)
+	    valid_p &= tdesc_numbered_register (feature, tdesc_data,
+						PPC_EBBRR_REGNUM + i,
+						ebb_regs[i]);
+	  if (!valid_p)
+	    {
+	      tdesc_data_cleanup (tdesc_data);
+	      return NULL;
+	    }
+	  have_ebb = 1;
+	}
+      else
+	have_ebb = 0;
+
+      /* Performance Monitor Registers.  */
+      feature = tdesc_find_feature (tdesc,
+				    "org.gnu.gdb.power.pmu");
+      if (feature != NULL)
+	{
+	  static const char *const pmu_regs[] = {
+	    "siar", "sdar", "sier", "mmcr2", "mmcr0"
+	  };
+
+	  valid_p = 1;
+	  for (i = 0; i < ARRAY_SIZE (pmu_regs); i++)
+	    valid_p &= tdesc_numbered_register (feature, tdesc_data,
+						PPC_EBBRR_REGNUM + i,
+						pmu_regs[i]);
+	  if (!valid_p)
+	    {
+	      tdesc_data_cleanup (tdesc_data);
+	      return NULL;
+	    }
+	  have_pmu = 1;
+	}
+      else
+	have_pmu = 0;
     }
 
   /* If we have a 64-bit binary on a 32-bit target, complain.  Also
@@ -6453,6 +6502,8 @@ rs6000_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   tdep->ppc_dscr_regnum = have_dscr ? PPC_DSCR_REGNUM : -1;
   tdep->ppc_ppr_regnum = have_ppr ? PPC_PPR_REGNUM : -1;
   tdep->ppc_tar_regnum = have_tar ? PPC_TAR_REGNUM : -1;
+  tdep->have_ebb = have_ebb;
+  tdep->have_pmu = have_pmu;
 
   set_gdbarch_pc_regnum (gdbarch, PPC_PC_REGNUM);
   set_gdbarch_sp_regnum (gdbarch, PPC_R0_REGNUM + 1);

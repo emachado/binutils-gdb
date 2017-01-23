@@ -271,6 +271,8 @@ int have_ptrace_getsetfpregs = 1;
 #define NT_PPC_TAR	0x103		/* Target Address Register */
 #define NT_PPC_PPR	0x104		/* Program Priority Register */
 #define NT_PPC_DSCR	0x105		/* Data Stream Control Register */
+#define NT_PPC_EBB	0x106		/* Event Based Branch Registers */
+#define NT_PPC_PMU	0x107		/* Performance Monitor Registers */
 #endif /* NT_PPC_PPR */
 
 /* *INDENT-OFF* */
@@ -616,6 +618,26 @@ fetch_register (struct regcache *regcache, int tid, int regno)
       return;
     }
 
+  if (tdep->have_ebb)
+    {
+      if (PPC_IS_EBBREGSET_REGNUM(regno))
+	{
+	  fetch_regset (regcache, tid, NT_PPC_EBB, PPC_SIZEOF_EBBREGSET,
+			&ppc32_linux_ebbregset);
+	  return;
+	}
+    }
+
+  if (tdep->have_pmu)
+    {
+      if (PPC_IS_PMUREGSET_REGNUM(regno))
+	{
+	  fetch_regset (regcache, tid, NT_PPC_PMU, PPC_SIZEOF_PMUREGSET,
+			&ppc32_linux_pmuregset);
+	  return;
+	}
+    }
+
   if (regaddr == -1)
     {
       memset (buf, '\0', register_size (gdbarch, regno));   /* Supply zeroes */
@@ -895,6 +917,12 @@ fetch_ppc_registers (struct regcache *regcache, int tid)
     fetch_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
   if (tdep->ppc_tar_regnum != -1)
     fetch_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
+  if (tdep->have_ebb)
+    fetch_regset (regcache, tid, NT_PPC_EBB, PPC_SIZEOF_EBBREGSET,
+		  &ppc32_linux_ebbregset);
+  if (tdep->have_pmu)
+    fetch_regset (regcache, tid, NT_PPC_PMU, PPC_SIZEOF_PMUREGSET,
+		  &ppc32_linux_pmuregset);
 }
 
 /* Fetch registers from the child process.  Fetch all registers if
@@ -2600,7 +2628,10 @@ ppc_linux_read_description (struct target_ops *ops)
       isa206 = 1;
       if ((ppc_linux_get_hwcap2 () & PPC_FEATURE2_ARCH_2_07)
 	  && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_TAR)
-	  && check_regset (tid, NT_PPC_TAR, sizeof(uint64_t)))
+	  && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_EBB)
+	  && check_regset (tid, NT_PPC_TAR, sizeof(uint64_t))
+	  && check_regset (tid, NT_PPC_EBB, PPC_SIZEOF_EBBREGSET)
+	  && check_regset (tid, NT_PPC_PMU, PPC_SIZEOF_PMUREGSET))
 	isa207 = 1;
     }
 

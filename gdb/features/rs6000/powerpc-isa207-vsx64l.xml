@@ -20,4 +20,6 @@
   <xi:include href="power-dscr.xml"/>
   <xi:include href="power-ppr.xml"/>
   <xi:include href="power-tar.xml"/>
+  <xi:include href="power-ebb.xml"/>
+  <xi:include href="power-pmu.xml"/>
 </target>

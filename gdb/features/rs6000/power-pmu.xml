@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2017 Free Software Foundation, Inc.
+
+     Copying and distribution of this file, with or without modification,
+     are permitted in any medium without royalty provided the copyright
+     notice and this notice are preserved.  -->
+
+<!-- POWER8 Performance Monitor Registers.  -->
+<!DOCTYPE feature SYSTEM "gdb-target.dtd">
+<feature name="org.gnu.gdb.power.pmu">
+  <reg name="siar" bitsize="64" type="uint64" group="pmu"/>
+  <reg name="sdar" bitsize="64" type="uint64" group="pmu"/>
+  <reg name="sier" bitsize="64" type="uint64" group="pmu"/>
+  <reg name="mmcr2" bitsize="64" type="uint64" group="pmu"/>
+  <reg name="mmcr0" bitsize="64" type="uint64" group="pmu"/>
+</feature>
