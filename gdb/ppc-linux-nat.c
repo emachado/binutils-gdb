@@ -273,6 +273,14 @@ int have_ptrace_getsetfpregs = 1;
 #define NT_PPC_DSCR	0x105		/* Data Stream Control Register */
 #define NT_PPC_EBB	0x106		/* Event Based Branch Registers */
 #define NT_PPC_PMU	0x107		/* Performance Monitor Registers */
+#define NT_PPC_TM_CGPR	0x108		/* TM checkpointed GPR Registers */
+#define NT_PPC_TM_CFPR	0x109		/* TM checkpointed FPR Registers */
+#define NT_PPC_TM_CVMX	0x10a		/* TM checkpointed VMX Registers */
+#define NT_PPC_TM_CVSX	0x10b		/* TM checkpointed VSX Registers */
+#define NT_PPC_TM_SPR	0x10c		/* TM Special Purpose Registers */
+#define NT_PPC_TM_CTAR	0x10d		/* TM checkpointed Target Address Register */
+#define NT_PPC_TM_CPPR	0x10e		/* TM checkpointed Program Priority Register */
+#define NT_PPC_TM_CDSCR	0x10f		/* TM checkpointed Data Stream Control Register */
 #endif /* NT_PPC_PPR */
 
 /* *INDENT-OFF* */
@@ -291,6 +299,8 @@ PT_FPR0 + 48, PT_FPR0 + 50, PT_FPR0 + 52, PT_FPR0 + 54,
 PT_FPR0 + 56, PT_FPR0 + 58, PT_FPR0 + 60, PT_FPR0 + 62,
 PT_NIP, PT_MSR, PT_CCR, PT_LNK, PT_CTR, PT_XER, PT_MQ */
 /* *INDENT_ON * */
+
+static int ppc_linux_target_wordsize (void);
 
 static int
 ppc_register_u_addr (struct gdbarch *gdbarch, int regno)
@@ -638,6 +648,62 @@ fetch_register (struct regcache *regcache, int tid, int regno)
 	}
     }
 
+  if (tdep->have_htm)
+    {
+      if (PPC_IS_TMREGSET_REGNUM(regno))
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_SPR, PPC_SIZEOF_TM_SPRREGSET,
+			&ppc32_linux_tm_sprregset);
+	  return;
+	}
+      if (PPC_IS_CRREGSET_REGNUM(regno))
+	{
+	  if (ppc_linux_target_wordsize () == 4)
+	    fetch_regset (regcache, tid, NT_PPC_TM_CGPR, PPC32_SIZEOF_CGPRREGSET,
+			  &ppc32_linux_cgprregset);
+	  else
+	    fetch_regset (regcache, tid, NT_PPC_TM_CGPR, PPC64_SIZEOF_CGPRREGSET,
+			  &ppc64_linux_cgprregset);
+	  return;
+	}
+      if (PPC_IS_CFPREGSET_REGNUM(regno))
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_CFPR, PPC_SIZEOF_CFPRREGSET,
+			&ppc32_linux_cfprregset);
+	  return;
+ 	}
+      if (PPC_IS_CVMXREGSET_REGNUM(regno))
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_CVMX, PPC_SIZEOF_CVMXREGSET,
+			&ppc32_linux_cvmxregset);
+	  return;
+	}
+      if (PPC_IS_CVSXREGSET_REGNUM(regno))
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_CVSX, PPC_SIZEOF_CVSXREGSET,
+			&ppc32_linux_cvsxregset);
+	  return;
+	}
+      if (regno == tdep->ppc_cdscr_regnum)
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_CDSCR, 8,
+			&ppc32_linux_cdscrregset);
+	  return;
+	}
+      if (regno == tdep->ppc_cppr_regnum)
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_CPPR, 8,
+			&ppc32_linux_cpprregset);
+	  return;
+	}
+      if (regno == tdep->ppc_ctar_regnum)
+	{
+	  fetch_regset (regcache, tid, NT_PPC_TM_CTAR, 8,
+			&ppc32_linux_ctarregset);
+	  return;
+	}
+    }
+
   if (regaddr == -1)
     {
       memset (buf, '\0', register_size (gdbarch, regno));   /* Supply zeroes */
@@ -923,6 +989,26 @@ fetch_ppc_registers (struct regcache *regcache, int tid)
   if (tdep->have_pmu)
     fetch_regset (regcache, tid, NT_PPC_PMU, PPC_SIZEOF_PMUREGSET,
 		  &ppc32_linux_pmuregset);
+  if (tdep->have_htm)
+    {
+      fetch_regset (regcache, tid, NT_PPC_TM_SPR, PPC_SIZEOF_TM_SPRREGSET,
+		    &ppc32_linux_tm_sprregset);
+      if (ppc_linux_target_wordsize () == 4)
+	fetch_regset (regcache, tid, NT_PPC_TM_CGPR, PPC32_SIZEOF_CGPRREGSET,
+		      &ppc32_linux_cgprregset);
+      else
+	fetch_regset (regcache, tid, NT_PPC_TM_CGPR, PPC64_SIZEOF_CGPRREGSET,
+		      &ppc64_linux_cgprregset);
+      fetch_regset (regcache, tid, NT_PPC_TM_CFPR, PPC_SIZEOF_CFPRREGSET,
+		    &ppc32_linux_cfprregset);
+      fetch_regset (regcache, tid, NT_PPC_TM_CVMX, PPC_SIZEOF_CVMXREGSET,
+		    &ppc32_linux_cvmxregset);
+      fetch_regset (regcache, tid, NT_PPC_TM_CVSX, PPC_SIZEOF_CVSXREGSET,
+		    &ppc32_linux_cvsxregset);
+      fetch_regset (regcache, tid, NT_PPC_TM_CDSCR, 8, &ppc32_linux_cdscrregset);
+      fetch_regset (regcache, tid, NT_PPC_TM_CPPR, 8, &ppc32_linux_cpprregset);
+      fetch_regset (regcache, tid, NT_PPC_TM_CTAR, 8, &ppc32_linux_ctarregset);
+    }
 }
 
 /* Fetch registers from the child process.  Fetch all registers if
@@ -1140,6 +1226,56 @@ store_register (const struct regcache *regcache, int tid, int regno)
     {
       store_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
       return;
+    }
+
+  if (tdep->have_htm)
+    {
+      if (PPC_IS_CRREGSET_REGNUM(regno))
+	{
+	  if (ppc_linux_target_wordsize () == 4)
+	    store_regset (regcache, tid, NT_PPC_TM_CGPR, PPC32_SIZEOF_CGPRREGSET,
+			  &ppc32_linux_cgprregset);
+	  else
+	    store_regset (regcache, tid, NT_PPC_TM_CGPR, PPC64_SIZEOF_CGPRREGSET,
+			  &ppc64_linux_cgprregset);
+	  return;
+	}
+      if (PPC_IS_CFPREGSET_REGNUM(regno))
+	{
+	  store_regset (regcache, tid, NT_PPC_TM_CFPR, PPC_SIZEOF_CFPRREGSET,
+			&ppc32_linux_cfprregset);
+	  return;
+	}
+      if (PPC_IS_CVMXREGSET_REGNUM(regno))
+	{
+	  store_regset (regcache, tid, NT_PPC_TM_CVMX, PPC_SIZEOF_CVMXREGSET,
+			&ppc32_linux_cvmxregset);
+	  return;
+	}
+      if (PPC_IS_CVSXREGSET_REGNUM(regno))
+	{
+	  store_regset (regcache, tid, NT_PPC_TM_CVSX, PPC_SIZEOF_CVSXREGSET,
+			&ppc32_linux_cvsxregset);
+	  return;
+	}
+      if (regno == tdep->ppc_cdscr_regnum)
+	{
+	  store_regset (regcache, tid, NT_PPC_TM_CDSCR, 8,
+			&ppc32_linux_cdscrregset);
+	  return;
+	}
+      if (regno == tdep->ppc_cppr_regnum)
+	{
+	  store_regset (regcache, tid, NT_PPC_TM_CPPR, 8,
+			&ppc32_linux_cpprregset);
+	  return;
+	}
+      if (regno == tdep->ppc_ctar_regnum)
+	{
+	  store_regset (regcache, tid, NT_PPC_TM_CTAR, 8,
+			&ppc32_linux_ctarregset);
+	  return;
+	}
     }
 
   if (regaddr == -1)
@@ -1443,6 +1579,24 @@ store_ppc_registers (const struct regcache *regcache, int tid)
     store_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
   if (tdep->ppc_tar_regnum != -1)
     store_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
+  if (tdep->have_htm)
+    {
+      if (ppc_linux_target_wordsize () == 4)
+	store_regset (regcache, tid, NT_PPC_TM_CGPR, PPC32_SIZEOF_CGPRREGSET,
+		      &ppc32_linux_cgprregset);
+      else
+	store_regset (regcache, tid, NT_PPC_TM_CGPR, PPC64_SIZEOF_CGPRREGSET,
+		      &ppc64_linux_cgprregset);
+      store_regset (regcache, tid, NT_PPC_TM_CFPR, PPC_SIZEOF_CFPRREGSET,
+		    &ppc32_linux_cfprregset);
+      store_regset (regcache, tid, NT_PPC_TM_CVMX, PPC_SIZEOF_CVMXREGSET,
+		    &ppc32_linux_cvmxregset);
+      store_regset (regcache, tid, NT_PPC_TM_CVSX, PPC_SIZEOF_CVSXREGSET,
+		    &ppc32_linux_cvsxregset);
+      store_regset (regcache, tid, NT_PPC_TM_CDSCR, 8, &ppc32_linux_cdscrregset);
+      store_regset (regcache, tid, NT_PPC_TM_CPPR, 8, &ppc32_linux_cpprregset);
+      store_regset (regcache, tid, NT_PPC_TM_CTAR, 8, &ppc32_linux_ctarregset);
+    }
 }
 
 /* Fetch the AT_HWCAP entry from the aux vector.  */
@@ -2629,9 +2783,11 @@ ppc_linux_read_description (struct target_ops *ops)
       if ((ppc_linux_get_hwcap2 () & PPC_FEATURE2_ARCH_2_07)
 	  && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_TAR)
 	  && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_EBB)
+	  && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_HTM)
 	  && check_regset (tid, NT_PPC_TAR, sizeof(uint64_t))
 	  && check_regset (tid, NT_PPC_EBB, PPC_SIZEOF_EBBREGSET)
-	  && check_regset (tid, NT_PPC_PMU, PPC_SIZEOF_PMUREGSET))
+	  && check_regset (tid, NT_PPC_PMU, PPC_SIZEOF_PMUREGSET)
+	  && check_regset (tid, NT_PPC_TM_SPR, PPC_SIZEOF_TM_SPRREGSET))
 	isa207 = 1;
     }
 

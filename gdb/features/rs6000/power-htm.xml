@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<!-- Copyright (C) 2017 Free Software Foundation, Inc.
+
+     Copying and distribution of this file, with or without modification,
+     are permitted in any medium without royalty provided the copyright
+     notice and this notice are preserved.  -->
+
+<!-- POWER8 Hardware Transactional Memory support.  -->
+<!DOCTYPE feature SYSTEM "gdb-target.dtd">
+<feature name="org.gnu.gdb.power.htm">
+  <reg name="tfhar" bitsize="64" type="uint64" group="htm"/>
+  <reg name="texasr" bitsize="64" type="uint64" group="htm"/>
+  <reg name="tfiar" bitsize="64" type="uint64" group="htm"/>
+
+  <reg name="cr0" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr1" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr2" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr3" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr4" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr5" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr6" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr7" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr8" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr9" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr10" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr11" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr12" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr13" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr14" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr15" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr16" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr17" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr18" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr19" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr20" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr21" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr22" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr23" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr24" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr25" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr26" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr27" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr28" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr29" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr30" bitsize="32" type="uint32" group="htm"/>
+  <reg name="cr31" bitsize="32" type="uint32" group="htm"/>
+
+  <reg name="cf0" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf1" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf2" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf3" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf4" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf5" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf6" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf7" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf8" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf9" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf10" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf11" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf12" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf13" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf14" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf15" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf16" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf17" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf18" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf19" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf20" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf21" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf22" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf23" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf24" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf25" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf26" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf27" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf28" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf29" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf30" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cf31" bitsize="64" type="ieee_double" group="htm"/>
+  <reg name="cfpscr" bitsize="64" group="htm"/>
+
+  <!-- HTM Checkpointed Altivec (VMX) registers -->
+  <vector id="v4f" type="ieee_single" count="4"/>
+  <vector id="v4i32" type="int32" count="4"/>
+  <vector id="v8i16" type="int16" count="8"/>
+  <vector id="v16i8" type="int8" count="16"/>
+  <union id="vec128">
+    <field name="uint128" type="uint128"/>
+    <field name="v4_float" type="v4f"/>
+    <field name="v4_int32" type="v4i32"/>
+    <field name="v8_int16" type="v8i16"/>
+    <field name="v16_int8" type="v16i8"/>
+  </union>
+
+  <reg name="cvr0" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr1" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr2" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr3" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr4" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr5" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr6" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr7" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr8" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr9" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr10" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr11" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr12" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr13" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr14" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr15" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr16" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr17" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr18" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr19" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr20" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr21" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr22" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr23" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr24" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr25" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr26" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr27" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr28" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr29" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr30" bitsize="128" type="vec128" group="htm"/>
+  <reg name="cvr31" bitsize="128" type="vec128" group="htm"/>
+
+  <reg name="cvscr" bitsize="32" group="htm"/>
+  <reg name="cvrsave" bitsize="32" group="htm"/>
+
+  <!-- HTM Checkpointed VSX registers -->
+  <reg name="cvs0h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs1h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs2h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs3h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs4h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs5h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs6h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs7h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs8h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs9h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs10h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs11h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs12h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs13h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs14h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs15h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs16h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs17h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs18h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs19h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs20h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs21h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs22h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs23h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs24h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs25h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs26h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs27h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs28h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs29h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs30h" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cvs31h" bitsize="64" type="uint64" group="htm"/>
+
+  <reg name="cdscr" bitsize="64" type="uint64" group="htm"/>
+  <reg name="cppr" bitsize="64" type="uint64" group="htm"/>
+  <reg name="ctar" bitsize="64" type="uint64" group="htm"/>
+</feature>

@@ -22,4 +22,5 @@
   <xi:include href="power-tar.xml"/>
   <xi:include href="power-ebb.xml"/>
   <xi:include href="power-pmu.xml"/>
+  <xi:include href="power-htm.xml"/>
 </target>

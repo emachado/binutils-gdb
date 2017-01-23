@@ -513,6 +513,65 @@ static const struct regcache_map_entry ppc32_regmap_pmu[] =
       { 0 }
   };
 
+static const struct regcache_map_entry ppc32_regmap_tm_spr[] =
+  {
+      { 1, PPC_TFHAR_REGNUM, 8 },
+      { 1, PPC_TEXASR_REGNUM, 8 },
+      { 1, PPC_TFIAR_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_cgpr[] =
+  {
+      { 32, PPC_CR0_REGNUM, 4 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc64_regmap_cgpr[] =
+  {
+      { 32, PPC_CR0_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_cfpr[] =
+  {
+      { 32, PPC_CF0_REGNUM, 8 },
+      { 1, PPC_CFPSCR_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_cvmx[] =
+  {
+      { 32, PPC_CVR0_REGNUM, 16 },
+      { 1, PPC_CVSCR_REGNUM, 16 },
+      { 1, PPC_CVRSAVE_REGNUM, 16 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_cvsx[] =
+  {
+      { 32, PPC_CVS0H_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_cdscr[] =
+  {
+      { 1, PPC_CDSCR_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_ctar[] =
+  {
+      { 1, PPC_CTAR_REGNUM, 8 },
+      { 0 }
+  };
+
+static const struct regcache_map_entry ppc32_regmap_cppr[] =
+  {
+      { 1, PPC_CPPR_REGNUM, 8 },
+      { 0 }
+  };
+
 static const struct regset ppc32_linux_gregset = {
   &ppc32_linux_reg_offsets,
   ppc_linux_supply_gregset,
@@ -573,6 +632,60 @@ const struct regset ppc32_linux_pmuregset = {
   regcache_collect_regset
 };
 
+const struct regset ppc32_linux_tm_sprregset = {
+  ppc32_regmap_tm_spr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_cgprregset = {
+  ppc32_regmap_cgpr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc64_linux_cgprregset = {
+  ppc64_regmap_cgpr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_cfprregset = {
+  ppc32_regmap_cfpr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_cvmxregset = {
+  ppc32_regmap_cvmx,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_cvsxregset = {
+  ppc32_regmap_cvsx,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_cdscrregset = {
+  ppc32_regmap_cdscr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_cpprregset = {
+  ppc32_regmap_cppr,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
+const struct regset ppc32_linux_ctarregset = {
+  ppc32_regmap_ctar,
+  regcache_supply_regset,
+  regcache_collect_regset
+};
+
 const struct regset *
 ppc_linux_gregset (int wordsize)
 {
@@ -625,6 +738,32 @@ ppc_linux_iterate_over_regset_sections (struct gdbarch *gdbarch,
   if (tdep->have_pmu)
     cb (".reg-ppc-pmu", PPC_SIZEOF_PMUREGSET, &ppc32_linux_pmuregset,
 	"Performance Monitor Registers", cb_data);
+  if (tdep->have_htm)
+    {
+      cb (".reg-ppc-tm-spr", PPC_SIZEOF_TM_SPRREGSET, &ppc32_linux_tm_sprregset,
+	  "Hardware Transactional Memory Special Purpose Registers", cb_data);
+      if (tdep->wordsize == 4)
+	cb (".reg-ppc-tm-cgpr", PPC32_SIZEOF_CGPRREGSET, &ppc32_linux_cgprregset,
+	    "Checkpointed General Purpose Registers", cb_data);
+      else
+	cb (".reg-ppc-tm-cgpr", PPC64_SIZEOF_CGPRREGSET, &ppc64_linux_cgprregset,
+	    "Checkpointed General Purpose Registers", cb_data);
+      cb (".reg-ppc-tm-cfpr", PPC_SIZEOF_CFPRREGSET, &ppc32_linux_cfprregset,
+	  "Checkpointed Floating Point Registers", cb_data);
+      cb (".reg-ppc-tm-cvmx", PPC_SIZEOF_CVMXREGSET, &ppc32_linux_cvmxregset,
+	  "Checkpointed Altivec (VMX) Registers", cb_data);
+      cb (".reg-ppc-tm-cvsx", PPC_SIZEOF_CVSXREGSET, &ppc32_linux_cvsxregset,
+	  "Checkpointed VSX Registers", cb_data);
+      if (have_dscr)
+	cb (".reg-ppc-tm-cdscr", 8, &ppc32_linux_cdscrregset,
+	    "Checkpointed Data Stream Control Register", cb_data);
+      if (have_ppr)
+	cb (".reg-ppc-tm-cppr", 8, &ppc32_linux_cpprregset,
+	    "Checkpointed Priority Program Register", cb_data);
+      if (have_tar)
+	cb (".reg-ppc-tm-ctar", 8, &ppc32_linux_ctarregset,
+	    "Checkpointed Target Address Register", cb_data);
+    }
 }
 
 static void

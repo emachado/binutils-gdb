@@ -67,5 +67,14 @@ extern const struct regset ppc32_linux_pprregset;
 extern const struct regset ppc32_linux_tarregset;
 extern const struct regset ppc32_linux_ebbregset;
 extern const struct regset ppc32_linux_pmuregset;
+extern const struct regset ppc32_linux_tm_sprregset;
+extern const struct regset ppc32_linux_cgprregset;
+extern const struct regset ppc64_linux_cgprregset;
+extern const struct regset ppc32_linux_cfprregset;
+extern const struct regset ppc32_linux_cvmxregset;
+extern const struct regset ppc32_linux_cvsxregset;
+extern const struct regset ppc32_linux_cdscrregset;
+extern const struct regset ppc32_linux_cpprregset;
+extern const struct regset ppc32_linux_ctarregset;
 
 #endif /* PPC_LINUX_TDEP_H */
