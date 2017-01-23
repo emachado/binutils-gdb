@@ -49,6 +49,7 @@ extern struct target_desc *tdesc_powerpc_isa205_32l;
 extern struct target_desc *tdesc_powerpc_isa205_altivec32l;
 extern struct target_desc *tdesc_powerpc_isa205_vsx32l;
 extern struct target_desc *tdesc_powerpc_isa206_vsx32l;
+extern struct target_desc *tdesc_powerpc_isa207_vsx32l;
 extern struct target_desc *tdesc_powerpc_e500l;
 extern struct target_desc *tdesc_powerpc_64l;
 extern struct target_desc *tdesc_powerpc_altivec64l;
@@ -58,9 +59,11 @@ extern struct target_desc *tdesc_powerpc_isa205_64l;
 extern struct target_desc *tdesc_powerpc_isa205_altivec64l;
 extern struct target_desc *tdesc_powerpc_isa205_vsx64l;
 extern struct target_desc *tdesc_powerpc_isa206_vsx64l;
+extern struct target_desc *tdesc_powerpc_isa207_vsx64l;
 
 /* Core file register sets, defined in ppc-linux-tdep.c.  */
 extern const struct regset ppc32_linux_dscrregset;
 extern const struct regset ppc32_linux_pprregset;
+extern const struct regset ppc32_linux_tarregset;
 
 #endif /* PPC_LINUX_TDEP_H */

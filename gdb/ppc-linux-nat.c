@@ -268,6 +268,7 @@ int have_ptrace_getsetfpregs = 1;
 
 #ifndef NT_PPC_PPR
 /* ELF core note sections */
+#define NT_PPC_TAR	0x103		/* Target Address Register */
 #define NT_PPC_PPR	0x104		/* Program Priority Register */
 #define NT_PPC_DSCR	0x105		/* Data Stream Control Register */
 #endif /* NT_PPC_PPR */
@@ -609,6 +610,12 @@ fetch_register (struct regcache *regcache, int tid, int regno)
       return;
     }
 
+  if (regno == tdep->ppc_tar_regnum)
+    {
+      fetch_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
+      return;
+    }
+
   if (regaddr == -1)
     {
       memset (buf, '\0', register_size (gdbarch, regno));   /* Supply zeroes */
@@ -886,6 +893,8 @@ fetch_ppc_registers (struct regcache *regcache, int tid)
     fetch_regset (regcache, tid, NT_PPC_DSCR, 8, &ppc32_linux_dscrregset);
   if (tdep->ppc_ppr_regnum != -1)
     fetch_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
+  if (tdep->ppc_tar_regnum != -1)
+    fetch_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
 }
 
 /* Fetch registers from the child process.  Fetch all registers if
@@ -1096,6 +1105,12 @@ store_register (const struct regcache *regcache, int tid, int regno)
   if (regno == tdep->ppc_ppr_regnum)
     {
       store_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
+      return;
+    }
+
+  if (regno == tdep->ppc_tar_regnum)
+    {
+      store_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
       return;
     }
 
@@ -1398,6 +1413,8 @@ store_ppc_registers (const struct regcache *regcache, int tid)
     store_regset (regcache, tid, NT_PPC_DSCR, 8, &ppc32_linux_dscrregset);
   if (tdep->ppc_ppr_regnum != -1)
     store_regset (regcache, tid, NT_PPC_PPR, 8, &ppc32_linux_pprregset);
+  if (tdep->ppc_tar_regnum != -1)
+    store_regset (regcache, tid, NT_PPC_TAR, 8, &ppc32_linux_tarregset);
 }
 
 /* Fetch the AT_HWCAP entry from the aux vector.  */
@@ -2516,6 +2533,7 @@ ppc_linux_read_description (struct target_ops *ops)
   int isa205 = 0;
   int cell = 0;
   int isa206 = 0;
+  int isa207 = 0;
 
   int tid = ptid_get_lwp (inferior_ptid);
   if (tid == 0)
@@ -2578,14 +2596,21 @@ ppc_linux_read_description (struct target_ops *ops)
       && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_DSCR)
       && check_regset (tid, NT_PPC_PPR, sizeof(uint64_t))
       && check_regset (tid, NT_PPC_DSCR, sizeof(uint64_t)))
-    isa206 = 1;
+    {
+      isa206 = 1;
+      if ((ppc_linux_get_hwcap2 () & PPC_FEATURE2_ARCH_2_07)
+	  && (ppc_linux_get_hwcap2 () & PPC_FEATURE2_TAR)
+	  && check_regset (tid, NT_PPC_TAR, sizeof(uint64_t)))
+	isa207 = 1;
+    }
 
   if (ppc_linux_target_wordsize () == 8)
     {
       if (cell)
 	return tdesc_powerpc_cell64l;
       else if (vsx)
-	return isa206? tdesc_powerpc_isa206_vsx64l
+	return isa207? tdesc_powerpc_isa207_vsx64l
+	  : isa206? tdesc_powerpc_isa206_vsx64l
 	  : isa205? tdesc_powerpc_isa205_vsx64l : tdesc_powerpc_vsx64l;
       else if (altivec)
 	return isa205
@@ -2597,7 +2622,8 @@ ppc_linux_read_description (struct target_ops *ops)
   if (cell)
     return tdesc_powerpc_cell32l;
   else if (vsx)
-    return isa206? tdesc_powerpc_isa206_vsx32l
+    return isa207? tdesc_powerpc_isa207_vsx32l
+      : isa206? tdesc_powerpc_isa206_vsx32l
       : isa205? tdesc_powerpc_isa205_vsx32l : tdesc_powerpc_vsx32l;
   else if (altivec)
     return isa205? tdesc_powerpc_isa205_altivec32l : tdesc_powerpc_altivec32l;

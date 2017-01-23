@@ -249,6 +249,8 @@ struct gdbarch_tdep
     int ppc_dscr_regnum;
     /* Program Priority Register.  */
     int ppc_ppr_regnum;
+    /* Target Address Register.  */
+    int ppc_tar_regnum;
 
     /* Decimal 128 registers.  */
     int ppc_dl0_regnum;		/* First Decimal128 argument register pair.  */
@@ -308,6 +310,7 @@ enum {
   PPC_VSR31_UPPER_REGNUM = 171,
   PPC_DSCR_REGNUM = 172,
   PPC_PPR_REGNUM = 173,
+  PPC_TAR_REGNUM = 174,
   PPC_NUM_REGS
 };
 
