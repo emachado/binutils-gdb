@@ -20,6 +20,8 @@
 #include "server.h"
 #include "linux-low.h"
 
+#include "elf/common.h"
+#include <sys/uio.h>
 #include <elf.h>
 #include <asm/ptrace.h>
 
@@ -40,6 +42,7 @@
 #define PPC_BD(insn)	(PPC_SEXT (PPC_FIELD (insn, 16, 14), 14) << 2)
 
 static unsigned long ppc_hwcap;
+static unsigned long ppc_hwcap2;
 
 
 #define ppc_num_regs 73
@@ -113,6 +116,21 @@ static int ppc_regmap_e500[] =
   PT_ORIG_R3 * 4, PT_TRAP * 4
  };
 #endif
+
+static int
+ppc_check_regset (int pid, int regset, int regsize)
+{
+  void *buf = alloca (regsize);
+  struct iovec iov;
+
+  iov.iov_base = buf;
+  iov.iov_len = regsize;
+
+  if (ptrace (PTRACE_GETREGSET, pid, (long) regset, (long) &iov) >= 0
+      || errno == ENODATA)
+    return 1;
+  return 0;
+}
 
 static int
 ppc_cannot_store_register (int regno)
@@ -457,6 +475,62 @@ static void ppc_fill_gregset (struct regcache *regcache, void *buf)
     ppc_collect_ptrace_register (regcache, i, (char *) buf + ppc_regmap[i]);
 }
 
+static void
+ppc_fill_pprregset (struct regcache *regcache, void *buf)
+{
+  int i, base;
+  int pid = pid_of (current_thread);
+  char *ppr = (char *) buf;
+
+  if (!((ppc_hwcap & PPC_FEATURE_ARCH_2_06)
+	&& (ppc_check_regset (pid, NT_PPC_PPR, 8))))
+    return;
+
+  collect_register_by_name (regcache, "ppr", ppr);
+}
+
+static void
+ppc_store_pprregset (struct regcache *regcache, const void *buf)
+{
+  int i, base;
+  int pid = pid_of (current_thread);
+  const char *ppr= (const char *) buf;
+
+  if (!((ppc_hwcap & PPC_FEATURE_ARCH_2_06)
+	&& (ppc_check_regset (pid, NT_PPC_PPR, 8))))
+    return;
+
+  supply_register_by_name (regcache, "ppr", ppr);
+}
+
+static void
+ppc_fill_dscrregset (struct regcache *regcache, void *buf)
+{
+  int i, base;
+  int pid = pid_of (current_thread);
+  char *dscr = (char *) buf;
+
+  if (!((ppc_hwcap & PPC_FEATURE_ARCH_2_06)
+	&& (ppc_check_regset (pid, NT_PPC_DSCR, 8))))
+    return;
+
+  collect_register_by_name (regcache, "dscr", dscr);
+}
+
+static void
+ppc_store_dscrregset (struct regcache *regcache, const void *buf)
+{
+  int i, base;
+  int pid = pid_of (current_thread);
+  const char *dscr= (const char *) buf;
+
+  if (!((ppc_hwcap & PPC_FEATURE_ARCH_2_06)
+	&& (ppc_check_regset (pid, NT_PPC_DSCR, 8))))
+    return;
+
+  supply_register_by_name (regcache, "dscr", dscr);
+}
+
 #define SIZEOF_VSXREGS 32*8
 
 static void
@@ -577,6 +651,10 @@ static struct regset_info ppc_regsets[] = {
      fetch them every time, but still fall back to PTRACE_PEEKUSER for the
      general registers.  Some kernels support these, but not the newer
      PPC_PTRACE_GETREGS.  */
+  { PTRACE_GETREGSET, PTRACE_SETREGSET, NT_PPC_PPR, 8, EXTENDED_REGS,
+  ppc_fill_pprregset, ppc_store_pprregset },
+  { PTRACE_GETREGSET, PTRACE_SETREGSET, NT_PPC_DSCR, 8, EXTENDED_REGS,
+  ppc_fill_dscrregset, ppc_store_dscrregset },
   { PTRACE_GETVSXREGS, PTRACE_SETVSXREGS, 0, SIZEOF_VSXREGS, EXTENDED_REGS,
   ppc_fill_vsxregset, ppc_store_vsxregset },
   { PTRACE_GETVRREGS, PTRACE_SETVRREGS, 0, SIZEOF_VRREGS, EXTENDED_REGS,
@@ -617,16 +695,32 @@ static void
 ppc_arch_setup (void)
 {
   const struct target_desc *tdesc;
+  int pid = pid_of (current_thread);
+  int have_regset_dscr = ppc_check_regset (pid, NT_PPC_DSCR, 8);
+  int have_regset_ppr = ppc_check_regset (pid, NT_PPC_PPR, 8);
+  int isa206;
 #ifdef __powerpc64__
   long msr;
   struct regcache *regcache;
+#endif
 
+  ppc_hwcap = 0;
+  ppc_hwcap2 = 0;
+  ppc_get_auxv (AT_HWCAP, &ppc_hwcap);
+  ppc_get_auxv (AT_HWCAP2, &ppc_hwcap2);
+
+  if ((ppc_hwcap & PPC_FEATURE_ARCH_2_06)
+      && (ppc_hwcap2 & PPC_FEATURE2_DSCR)
+      && have_regset_dscr
+      && have_regset_ppr)
+    isa206 = 1;
+
+#ifdef __powerpc64__
   /* On a 64-bit host, assume 64-bit inferior process with no
      AltiVec registers.  Reset ppc_hwcap to ensure that the
      collect_register call below does not fail.  */
   tdesc = tdesc_powerpc_64l;
   current_process ()->tdesc = tdesc;
-  ppc_hwcap = 0;
 
   regcache = new_register_cache (tdesc);
   fetch_inferior_registers (regcache, find_regno (tdesc, "msr"));
@@ -634,11 +728,12 @@ ppc_arch_setup (void)
   free_register_cache (regcache);
   if (ppc64_64bit_inferior_p (msr))
     {
-      ppc_get_auxv (AT_HWCAP, &ppc_hwcap);
       if (ppc_hwcap & PPC_FEATURE_CELL)
 	tdesc = tdesc_powerpc_cell64l;
       else if (ppc_hwcap & PPC_FEATURE_HAS_VSX)
 	{
+	  if (isa206)
+	    tdesc = tdesc_powerpc_isa206_vsx64l;
 	  /* Power ISA 2.05 (implemented by Power 6 and newer processors)
 	     increases the FPSCR from 32 bits to 64 bits. Even though Power 7
 	     supports this ISA version, it doesn't have PPC_FEATURE_ARCH_2_05
@@ -646,7 +741,7 @@ ppc_arch_setup (void)
 	     used in the higher half of the register are for Decimal Floating
 	     Point, we check if that feature is available to decide the size
 	     of the FPSCR.  */
-	  if (ppc_hwcap & PPC_FEATURE_HAS_DFP)
+	  else if (ppc_hwcap & PPC_FEATURE_HAS_DFP)
 	    tdesc = tdesc_powerpc_isa205_vsx64l;
 	  else
 	    tdesc = tdesc_powerpc_vsx64l;
@@ -668,12 +763,13 @@ ppc_arch_setup (void)
   tdesc = tdesc_powerpc_32l;
   current_process ()->tdesc = tdesc;
 
-  ppc_get_auxv (AT_HWCAP, &ppc_hwcap);
   if (ppc_hwcap & PPC_FEATURE_CELL)
     tdesc = tdesc_powerpc_cell32l;
   else if (ppc_hwcap & PPC_FEATURE_HAS_VSX)
     {
-      if (ppc_hwcap & PPC_FEATURE_HAS_DFP)
+      if (isa206)
+	tdesc = tdesc_powerpc_isa206_vsx32l;
+      else if (ppc_hwcap & PPC_FEATURE_HAS_DFP)
 	tdesc = tdesc_powerpc_isa205_vsx32l;
       else
 	tdesc = tdesc_powerpc_vsx32l;
@@ -3152,6 +3248,7 @@ initialize_low_arch (void)
   init_registers_powerpc_isa205_32l ();
   init_registers_powerpc_isa205_altivec32l ();
   init_registers_powerpc_isa205_vsx32l ();
+  init_registers_powerpc_isa206_vsx32l ();
   init_registers_powerpc_e500l ();
 #if __powerpc64__
   init_registers_powerpc_64l ();
@@ -3161,6 +3258,7 @@ initialize_low_arch (void)
   init_registers_powerpc_isa205_64l ();
   init_registers_powerpc_isa205_altivec64l ();
   init_registers_powerpc_isa205_vsx64l ();
+  init_registers_powerpc_isa206_vsx64l ();
 #endif
 
   initialize_regsets_info (&ppc_regsets_info);

@@ -62,6 +62,10 @@ extern const struct target_desc *tdesc_powerpc_isa205_altivec32l;
 void init_registers_powerpc_isa205_vsx32l (void);
 extern const struct target_desc *tdesc_powerpc_isa205_vsx32l;
 
+/* Defined in auto-generated file powerpc-isa206-vsx32l.c.  */
+void init_registers_powerpc_isa206_vsx32l (void);
+extern const struct target_desc *tdesc_powerpc_isa206_vsx32l;
+
 /* Defined in auto-generated file powerpc-e500l.c.  */
 void init_registers_powerpc_e500l (void);
 extern const struct target_desc *tdesc_powerpc_e500l;
@@ -97,5 +101,9 @@ extern const struct target_desc *tdesc_powerpc_isa205_altivec64l;
 /* Defined in auto-generated file powerpc-isa205-vsx64l.c.  */
 void init_registers_powerpc_isa205_vsx64l (void);
 extern const struct target_desc *tdesc_powerpc_isa205_vsx64l;
+
+/* Defined in auto-generated file powerpc-isa206-vsx64l.c.  */
+void init_registers_powerpc_isa206_vsx64l (void);
+extern const struct target_desc *tdesc_powerpc_isa206_vsx64l;
 
 #endif

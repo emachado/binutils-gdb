@@ -433,7 +433,9 @@ clean:
 	rm -f powerpc-altivec64l.c powerpc-cell64l.c powerpc-vsx64l.c
 	rm -f powerpc-isa205-32l.c powerpc-isa205-64l.c
 	rm -f powerpc-isa205-altivec32l.c powerpc-isa205-vsx32l.c powerpc-isa205-altivec64l.c
+	rm -f powerpc-isa206-vsx32l.c
 	rm -f powerpc-isa205-vsx64l.c
+	rm -f powerpc-isa206-vsx64l.c
 	rm -f s390-linux32.c s390-linux64.c s390x-linux64.c
 	rm -f s390-linux32v1.c s390-linux32v2.c s390-linux64v1.c
 	rm -f s390-linux64v2.c s390x-linux64v1.c s390x-linux64v2.c
@@ -944,6 +946,8 @@ powerpc-isa205-altivec32l.c : $(srcdir)/../regformats/rs6000/powerpc-isa205-alti
 	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-isa205-altivec32l.dat powerpc-isa205-altivec32l.c
 powerpc-isa205-vsx32l.c : $(srcdir)/../regformats/rs6000/powerpc-isa205-vsx32l.dat $(regdat_sh)
 	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-isa205-vsx32l.dat powerpc-isa205-vsx32l.c
+powerpc-isa206-vsx32l.c : $(srcdir)/../regformats/rs6000/powerpc-isa206-vsx32l.dat $(regdat_sh)
+	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-isa206-vsx32l.dat powerpc-isa206-vsx32l.c
 powerpc-e500l.c : $(srcdir)/../regformats/rs6000/powerpc-e500l.dat $(regdat_sh)
 	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-e500l.dat powerpc-e500l.c
 powerpc-64l.c : $(srcdir)/../regformats/rs6000/powerpc-64l.dat $(regdat_sh)
@@ -960,6 +964,8 @@ powerpc-isa205-altivec64l.c : $(srcdir)/../regformats/rs6000/powerpc-isa205-alti
 	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-isa205-altivec64l.dat powerpc-isa205-altivec64l.c
 powerpc-isa205-vsx64l.c : $(srcdir)/../regformats/rs6000/powerpc-isa205-vsx64l.dat $(regdat_sh)
 	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-isa205-vsx64l.dat powerpc-isa205-vsx64l.c
+powerpc-isa206-vsx64l.c : $(srcdir)/../regformats/rs6000/powerpc-isa206-vsx64l.dat $(regdat_sh)
+	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/rs6000/powerpc-isa206-vsx64l.dat powerpc-isa206-vsx64l.c
 s390-linux32.c : $(srcdir)/../regformats/s390-linux32.dat $(regdat_sh)
 	$(SHELL) $(regdat_sh) $(srcdir)/../regformats/s390-linux32.dat s390-linux32.c
 s390-linux32v1.c : $(srcdir)/../regformats/s390-linux32v1.dat $(regdat_sh)
